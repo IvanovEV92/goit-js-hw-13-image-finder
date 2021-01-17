@@ -2,6 +2,7 @@ import api from '../api/apiService';
 import debounce from 'lodash.debounce';
 import element from '../templates/elementList.hbs';
 import contentObserver from '../js/scrollAuto';
+import notify from '../js/notification';
 
 const refs = {
   bodyRef: document.body,
@@ -10,20 +11,32 @@ const refs = {
 };
 
 let queryItem = '';
-const searchImage = debounce(async e => {
+const searchImage = async e => {
   e.preventDefault();
   refs.listRef.innerHTML = '';
-  queryItem = e.target.value;
+  queryItem = e.currentTarget.elements.query.value;
   api.resetPage();
   updateList();
-  e.target.value = '';
-}, 1000);
-
-const updateList = async () => {
-  const imageList = await api.fetchImage(queryItem);
-  const itemList = element(imageList);
-  refs.listRef.insertAdjacentHTML('beforeend', itemList);
-  contentObserver(updateList);
+  e.currentTarget.elements.query.value = '';
 };
 
-refs.inputRef.addEventListener('input', searchImage);
+const updateList = async () => {
+  try {
+    const imageList = await api.fetchImage(queryItem);
+
+    if (imageList.length === 0) {
+      console.log('Запрос не коректный');
+      notify.notifyNoticeError();
+      return;
+    }
+    const itemList = element(imageList);
+
+    refs.listRef.insertAdjacentHTML('beforeend', itemList);
+
+    contentObserver(updateList);
+  } catch (err) {
+    console.log(err);
+  }
+};
+refs.inputRef.addEventListener('submit', searchImage);
+

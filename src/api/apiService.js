@@ -8,6 +8,7 @@ const fetchImage = async searchImage => {
   const response = await axios.get(
     `?key=${token}&q=${searchImage}&image_type=photo&per_page=12&page=${page}`,
   );
+
   page += 1;
   return response.data.hits;
 };
